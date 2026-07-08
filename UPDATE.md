@@ -1,14 +1,19 @@
-Release 1 - WP5 Backtest Engine
+Milestone 2 - Historical Backtesting
 
 NEW FILES
-- astraquant/backtest/backtest_engine.py
-- astraquant/backtest/trade_manager.py
-- astraquant/backtest/report.py
-- tests/test_backtest_engine.py
+---------
+astraquant/backtest/runner.py
+astraquant/backtest/performance.py
 
-Run:
-pytest tests
+MODIFIED FILES
+--------------
+main.py (replace with this version)
 
-Commit:
+Verification
+------------
+python main.py --mode backtest
+
+Commit
+------
 git add .
-git commit -m "Release 1 - WP5 Backtest Engine"
+git commit -m "Milestone 2 - Historical Backtesting"

@@ -1,13 +1,14 @@
-Release 1 - WP4 DIDRS Strategy
+Release 1 - WP5 Backtest Engine
 
 NEW FILES
-- astraquant/strategies/didrs/__init__.py
-- strike_selector.py
-- premium.py
-- validator.py
-- strategy.py
-- tests/test_didrs_strategy.py
+- astraquant/backtest/backtest_engine.py
+- astraquant/backtest/trade_manager.py
+- astraquant/backtest/report.py
+- tests/test_backtest_engine.py
+
+Run:
+pytest tests
 
 Commit:
 git add .
-git commit -m "Release 1 - WP4 DIDRS Strategy"
+git commit -m "Release 1 - WP5 Backtest Engine"

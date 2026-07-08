@@ -1,14 +1,13 @@
-Release 1 - WP3 Historical Data Layer
+Release 1 - WP4 DIDRS Strategy
 
 NEW FILES
-- astraquant/data/__init__.py
-- astraquant/data/schema.py
-- astraquant/data/csv_loader.py
-- astraquant/data/synchronizer.py
-- tests/test_csv_loader.py
-- sample_data/nifty_spot_5m.csv
-- sample_data/nifty_option_5m.csv
+- astraquant/strategies/didrs/__init__.py
+- strike_selector.py
+- premium.py
+- validator.py
+- strategy.py
+- tests/test_didrs_strategy.py
 
 Commit:
 git add .
-git commit -m "Release 1 - WP3 Historical Data Layer"
+git commit -m "Release 1 - WP4 DIDRS Strategy"

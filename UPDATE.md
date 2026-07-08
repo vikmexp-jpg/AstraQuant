@@ -1,15 +1,14 @@
-Release 1 - WP2
+Release 1 - WP3 Historical Data Layer
 
 NEW FILES
-- astraquant/core/models/candle.py
-- astraquant/core/models/signal.py
-- astraquant/core/models/trade.py
-- astraquant/core/models/position.py
-- astraquant/core/models/strategy_context.py
-- astraquant/core/models/strategy_result.py
-- astraquant/core/interfaces/strategy.py
-- astraquant/core/interfaces/data_provider.py
+- astraquant/data/__init__.py
+- astraquant/data/schema.py
+- astraquant/data/csv_loader.py
+- astraquant/data/synchronizer.py
+- tests/test_csv_loader.py
+- sample_data/nifty_spot_5m.csv
+- sample_data/nifty_option_5m.csv
 
 Commit:
 git add .
-git commit -m "Release 1 - WP2 Domain Models"
+git commit -m "Release 1 - WP3 Historical Data Layer"

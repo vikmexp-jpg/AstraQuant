@@ -17,3 +17,6 @@ dependencies = [
     "PyYAML",
     "python-dotenv"
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

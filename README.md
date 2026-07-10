@@ -1,23 +1,7 @@
 # AstraQuant
 
-A modular quantitative trading framework focused on options trading.
+A production-grade quantitative trading engine for the DIDRS strategy.
 
-## Current Status
+Current Version:
 
-Release: 1.0 Alpha
-
-## Strategy
-
-- DIDRS (Deep ITM Discount Reversal Strategy)
-
-## Roadmap
-
-- Historical Backtesting
-- Live Scanner
-- Upstox Integration
-- Paper Trading
-- Auto Trading
-
-## Development
-
-More documentation will be added as development progresses.
+1.0.0-alpha

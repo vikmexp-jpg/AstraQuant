@@ -1,1 +1,0 @@
-"""DIDRS strategy package."""

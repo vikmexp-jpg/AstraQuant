@@ -8,6 +8,7 @@ from .candle_synchronizer import CandleSynchronizer
 from .trade_manager import TradeManager
 from astraquant.strategies import DIDRSStrategy
 from astraquant.data import CSVDataProvider
+from .premium_calculator import PremiumCalculator
 
 
 class BacktestEngine:
@@ -54,10 +55,13 @@ class BacktestEngine:
 
             current = candles[index]
             next_candle = candles[index + 1]
-
+            expected = PremiumCalculator.expected_premium(
+                current.spot,
+                23500,
+            )
             signal = self.strategy.evaluate(
                 context=current,
-                expected_premium=current.option.close + 25,
+                expected_premium=expected,
                 strike=23500,
             )
 

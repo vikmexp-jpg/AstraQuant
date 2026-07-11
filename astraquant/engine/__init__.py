@@ -5,10 +5,12 @@ from .candle_synchronizer import (
 )
 
 from .trade_manager import TradeManager
+from .premium_calculator import PremiumCalculator
 
 __all__ = [
     "CandleSynchronizer",
     "SynchronizedCandle",
     "TradeManager",
+    "PremiumCalculator",
     "BacktestEngine",
 ]

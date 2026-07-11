@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from astraquant import config
 from astraquant.core.models import trade
 
 from .candle_synchronizer import CandleSynchronizer
@@ -9,6 +10,8 @@ from .trade_manager import TradeManager
 from astraquant.strategies import DIDRSStrategy
 from astraquant.data import CSVDataProvider
 from .premium_calculator import PremiumCalculator
+from astraquant.utils import StrikeSelector
+from astraquant.config.config_service import ConfigService
 
 
 class BacktestEngine:
@@ -38,6 +41,8 @@ class BacktestEngine:
 
         self.executed_trades = []
         self.signal_count = 0
+        # Load configuration
+        config = ConfigService.get()
 
         spot = self.spot_provider.candles()
         option = self.option_provider.candles()
@@ -89,15 +94,20 @@ class BacktestEngine:
             # STEP-2
             # Look for a new signal
             #
+            strike = StrikeSelector.strike(
+            spot_price=current.spot.close,
+                offset=config["trading"]["strike_offset"],
+            )
+
             expected = PremiumCalculator.expected_premium(
                 current.spot,
-                23500,
+                strike,
             )
 
             signal = self.strategy.evaluate(
                 context=current,
                 expected_premium=expected,
-                strike=23500,
+                strike=strike,
             )
 
             if signal is None:

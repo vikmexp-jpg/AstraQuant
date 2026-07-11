@@ -1,16 +1,31 @@
-"""
-Application entry point for AstraQuant.
-"""
-
-from astraquant.version import APPLICATION_NAME, VERSION
+from astraquant.config import ConfigLoader
+from astraquant.utils import LoggerFactory
 
 
 class Application:
-    """Main application."""
 
     @staticmethod
     def start() -> None:
+
+        config = ConfigLoader.load()
+
+        logger = LoggerFactory.get_logger(
+            level=config["logging"]["level"],
+            log_file=config["logging"]["file"],
+        )
+
+        logger.info("Application Started")
+
+        logger.info(
+            "Mode=%s Market=%s Strategy=%s",
+            config["environment"]["mode"],
+            config["market"]["symbol"],
+            config["strategy"]["name"],
+        )
+
         print("=" * 60)
-        print(f"{APPLICATION_NAME} {VERSION}")
+        print(
+            f"{config['application']['name']} "
+            f"{config['application']['version']}"
+        )
         print("=" * 60)
-        print("Application initialized successfully.")

@@ -11,3 +11,7 @@ market:
 
 strategy:
   name: DIDRS
+
+logging:
+  level: INFO
+  file: logs/astraquant.log

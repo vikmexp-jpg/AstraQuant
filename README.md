@@ -1,11 +1,35 @@
 # AstraQuant
 
-Production-grade quantitative trading engine.
+Production-grade quantitative trading framework.
 
-## Version
+---
+
+## Current Version
 
 1.0.0-alpha
 
-## Status
+---
 
-Development Started
+## Development Status
+
+✅ AQ-001 Batch-1 Completed
+
+🚧 AQ-001 Batch-2
+
+---
+
+## Project Structure
+
+```
+astraquant/
+config/
+docs/
+sample_data/
+tests/
+```
+
+---
+
+## Current Module
+
+Project Skeleton

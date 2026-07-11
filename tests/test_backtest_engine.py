@@ -8,6 +8,12 @@ def test_backtest_runs():
         "sample_data/option.csv",
     )
 
-    signals = engine.run()
+    trades = engine.run()
 
-    assert signals >= 0
+    assert isinstance(trades, list)
+
+    assert engine.total_signals >= 0
+
+    assert engine.total_trades >= 0
+
+    assert engine.total_signals >= engine.total_trades

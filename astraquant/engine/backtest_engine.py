@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from astraquant.core.models import trade
+
 from .candle_synchronizer import CandleSynchronizer
 from .trade_manager import TradeManager
 from astraquant.strategies import DIDRSStrategy
@@ -25,6 +27,8 @@ class BacktestEngine:
         self.strategy = DIDRSStrategy()
 
         self.trade_manager = TradeManager()
+        self.executed_trades = []
+        self.signal_count = 0
 
     def run(self) -> int:
         """
@@ -44,7 +48,7 @@ class BacktestEngine:
             option,
         )
 
-        signal_count = 0
+        self.signal_count = 0
 
         for index in range(len(candles) - 1):
 
@@ -60,13 +64,25 @@ class BacktestEngine:
             if signal is None:
                 continue
 
-            signal_count += 1
+            self.signal_count += 1
 
             self.trade_manager.register_signal(signal)
 
-            self.trade_manager.process_next_candle(
+            trade = self.trade_manager.process_next_candle(
                 current,
                 next_candle,
             )
 
-        return signal_count
+            if trade is not None:
+                self.executed_trades.append(trade)
+
+        return self.executed_trades
+
+    @property
+    def total_signals(self) -> int:
+        return self.signal_count
+
+
+    @property
+    def total_trades(self) -> int:
+        return len(self.executed_trades)

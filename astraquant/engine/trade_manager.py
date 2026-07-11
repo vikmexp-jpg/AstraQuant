@@ -29,10 +29,16 @@ class TradeManager:
         signal: Signal,
     ) -> None:
         """
-        Store BUY signal.
-
-        Entry is NOT taken immediately.
+        Store a BUY signal only if no trade is active.
         """
+
+        # Ignore signals while a trade is active
+        if self.current_trade is not None:
+            return
+
+        # Ignore if another signal is already waiting
+        if self._pending_signal is not None:
+            return
 
         self._pending_signal = signal
 
@@ -97,7 +103,9 @@ class TradeManager:
         current candle breaks
         previous candle HIGH.
         """
-
+        if self.current_trade is not None:
+            return None
+    
         if self._pending_signal is None:
             return None
 

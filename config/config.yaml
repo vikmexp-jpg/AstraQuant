@@ -15,3 +15,27 @@ strategy:
 logging:
   level: INFO
   file: logs/astraquant.log
+
+trading:
+  symbol: "NIFTY"
+
+  quantity: 1
+
+  strike_offset: -500
+
+  entry:
+    breakout_confirmation: true
+
+  target:
+    points: 30
+    partial_exit_percent: 50
+
+  stoploss:
+    trailing_points: 10
+    candle_close: true
+
+  session:
+    force_exit: "15:20"
+
+  risk:
+    max_open_trades: 1

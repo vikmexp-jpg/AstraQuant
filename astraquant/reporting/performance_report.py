@@ -13,6 +13,9 @@ class PerformanceMetrics:
     win_rate: float
     total_pnl: float
     average_pnl: float
+    equity_curve: list[float]
+    peak_equity: float
+    maximum_drawdown: float
 
 
 class PerformanceReport:
@@ -56,6 +59,28 @@ class PerformanceReport:
             else 0.0
         )
 
+        equity_curve = []
+
+        equity = 0.0
+
+        peak = 0.0
+
+        max_drawdown = 0.0
+
+        for trade in completed:
+
+            equity += trade.pnl
+
+            equity_curve.append(equity)
+
+            if equity > peak:
+                peak = equity
+
+            drawdown = peak - equity
+
+            if drawdown > max_drawdown:
+                max_drawdown = drawdown
+
         return PerformanceMetrics(
             total_trades=total,
             winning_trades=winners,
@@ -63,4 +88,7 @@ class PerformanceReport:
             win_rate=win_rate,
             total_pnl=total_pnl,
             average_pnl=average,
+            equity_curve=equity_curve,
+            peak_equity=peak,
+            maximum_drawdown=max_drawdown,
         )

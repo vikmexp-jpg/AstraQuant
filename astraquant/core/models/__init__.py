@@ -4,6 +4,11 @@ from .trade import Trade, TradeStatus
 from .position import Position
 from .strategy_context import StrategyContext
 from .market_session import MarketSession
+from .trade_event import (
+    TradeEvent,
+    TradeEventType,
+)
+
 
 __all__ = [
     "Candle",
@@ -13,5 +18,7 @@ __all__ = [
     "TradeStatus",
     "Position",
     "StrategyContext",
+    "TradeEvent",
+    "TradeEventType",
     "MarketSession",
 ]

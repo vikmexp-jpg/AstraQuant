@@ -3,6 +3,10 @@ from __future__ import annotations
 from astraquant.core.models import Signal, Trade
 from .candle_synchronizer import SynchronizedCandle
 from datetime import time
+from astraquant.core.models import (
+    TradeEvent,
+    TradeEventType,
+)
 
 
 class TradeManager:
@@ -23,6 +27,7 @@ class TradeManager:
         self._break_even = False
         self._trailing_stop: float | None = None
         self._reentry_allowed = True
+        self.trade_events: list[TradeEvent] = []
 
     def register_signal(
         self,
@@ -69,10 +74,43 @@ class TradeManager:
         ):
 
             self._half_exit_done = True
+            self.trade_events.append(
+                TradeEvent(
+                    timestamp=current.option.timestamp,
+                    event=TradeEventType.TARGET_50,
+                    price=price,
+                    quantity=max(1, self.current_trade.quantity // 2),
+                    note="50% target reached",
+                )
+            )
 
             self._break_even = True
+            self.trade_events.append(
+                TradeEvent(
+                    timestamp=current.option.timestamp,
+                    event=TradeEventType.BREAK_EVEN,
+                    price=entry,
+                    note="Break-even activated",
+                )
+            )
 
             self._trailing_stop = entry
+            old_stop = self._trailing_stop
+
+            new_stop = price - 10
+
+            if old_stop is None or new_stop > old_stop:
+
+                self._trailing_stop = new_stop
+
+                self.trade_events.append(
+                    TradeEvent(
+                        timestamp=current.option.timestamp,
+                        event=TradeEventType.TRAILING_UPDATE,
+                        price=new_stop,
+                        note="Trailing stop updated",
+                    )
+                )
 
             print(
                 "[TARGET] Exit 50% "
@@ -120,6 +158,15 @@ class TradeManager:
         )
 
         self.current_trade = trade
+        self.trade_events.append(
+            TradeEvent(
+                timestamp=current.spot.timestamp,
+                event=TradeEventType.ENTRY,
+                price=current.option.close,
+                quantity=trade.quantity,
+                note="Trade opened",
+            )
+        )
 
         self._pending_signal = None
 
@@ -146,6 +193,15 @@ class TradeManager:
             exit_time=current.option.timestamp,
             exit_price=current.option.close,
         )
+        self.trade_events.append(
+            TradeEvent(
+                timestamp=current.option.timestamp,
+                event=TradeEventType.FINAL_EXIT,
+                price=current.option.close,
+                quantity=self.current_trade.quantity,
+                note="Trade closed",
+            )
+        )
 
         self._reentry_allowed = True
 
@@ -168,6 +224,15 @@ class TradeManager:
         self.current_trade.close(
             exit_time=current.option.timestamp,
             exit_price=current.option.close,
+        )
+        self.trade_events.append(
+            TradeEvent(
+                timestamp=current.option.timestamp,
+                event=TradeEventType.FINAL_EXIT,
+                price=current.option.close,
+                quantity=self.current_trade.quantity,
+                note="Trade closed",
+            )
         )
 
         return True

@@ -1,14 +1,8 @@
-from astraquant.version import (
-    APPLICATION_NAME,
-    VERSION,
-)
+from astraquant.application import Application
 
 
 def main() -> None:
-    print("=" * 60)
-    print(f"{APPLICATION_NAME} {VERSION}")
-    print("=" * 60)
-    print("AQ-001 Project Skeleton Loaded Successfully")
+    Application.start()
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from astraquant.core.models import Signal, Trade
-from astraquant.engine import SynchronizedCandle
+from .candle_synchronizer import SynchronizedCandle
 from datetime import time
 
 

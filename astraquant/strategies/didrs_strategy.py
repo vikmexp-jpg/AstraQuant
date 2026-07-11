@@ -4,7 +4,10 @@ from astraquant.core.models import (
     Signal,
     SignalType,
 )
-from astraquant.engine import SynchronizedCandle
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from astraquant.engine import SynchronizedCandle
 
 
 class DIDRSStrategy:

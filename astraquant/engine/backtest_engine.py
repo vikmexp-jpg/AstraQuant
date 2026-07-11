@@ -31,15 +31,13 @@ class BacktestEngine:
         self.executed_trades = []
         self.signal_count = 0
 
-    def run(self) -> int:
+    def run(self) -> list:
         """
         Execute one complete historical backtest.
-
-        Returns
-        -------
-        int
-            Number of BUY signals generated.
         """
+
+        self.executed_trades = []
+        self.signal_count = 0
 
         spot = self.spot_provider.candles()
         option = self.option_provider.candles()
@@ -49,16 +47,53 @@ class BacktestEngine:
             option,
         )
 
-        self.signal_count = 0
+        print("=" * 60)
+        print(f"Spot Candles        : {len(spot)}")
+        print(f"Option Candles      : {len(option)}")
+        print(f"Synchronized        : {len(candles)}")
+        print("=" * 60)
 
         for index in range(len(candles) - 1):
 
             current = candles[index]
             next_candle = candles[index + 1]
+
+            #
+            # STEP-1
+            # Manage active trade
+            #
+            if self.trade_manager.current_trade is not None:
+
+                self.trade_manager.manage_trade(current)
+
+                self.trade_manager.check_stop_loss(current)
+
+                self.trade_manager.check_end_of_day(current)
+
+                #
+                # Trade completed?
+                #
+                if (
+                    self.trade_manager.current_trade.exit_price
+                    is not None
+                ):
+                    self.executed_trades.append(
+                        self.trade_manager.current_trade
+                    )
+
+                    self.trade_manager.reset_for_reentry()
+
+                continue
+
+            #
+            # STEP-2
+            # Look for a new signal
+            #
             expected = PremiumCalculator.expected_premium(
                 current.spot,
                 23500,
             )
+
             signal = self.strategy.evaluate(
                 context=current,
                 expected_premium=expected,
@@ -72,13 +107,30 @@ class BacktestEngine:
 
             self.trade_manager.register_signal(signal)
 
-            trade = self.trade_manager.process_next_candle(
+            self.trade_manager.process_next_candle(
                 current,
                 next_candle,
             )
 
-            if trade is not None:
-                self.executed_trades.append(trade)
+        #
+        # Safety:
+        # If the backtest ends with an open trade,
+        # close it on the last available candle.
+        #
+        if self.trade_manager.current_trade is not None:
+
+            last = candles[-1]
+
+            self.trade_manager.current_trade.close(
+                exit_time=last.option.timestamp,
+                exit_price=last.option.close,
+            )
+
+            self.executed_trades.append(
+                self.trade_manager.current_trade
+            )
+
+            self.trade_manager.reset_for_reentry()
 
         return self.executed_trades
 

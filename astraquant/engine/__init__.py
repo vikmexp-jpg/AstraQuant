@@ -3,7 +3,10 @@ from .candle_synchronizer import (
     SynchronizedCandle,
 )
 
+from .trade_manager import TradeManager
+
 __all__ = [
     "CandleSynchronizer",
     "SynchronizedCandle",
+    "TradeManager",
 ]

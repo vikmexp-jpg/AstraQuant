@@ -1,0 +1,13 @@
+application:
+  name: AstraQuant
+  version: 1.0.0-alpha
+
+environment:
+  mode: backtest
+
+market:
+  symbol: NIFTY
+  timeframe: 5m
+
+strategy:
+  name: DIDRS

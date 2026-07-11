@@ -1,45 +1,62 @@
 from __future__ import annotations
 
-from datetime import datetime
-
-from astraquant.core.models import (
-    Signal,
-    Trade,
-)
+from astraquant.core.models import Signal, Trade
+from astraquant.engine import SynchronizedCandle
 
 
 class TradeManager:
     """
-    Handles the DIDRS trade lifecycle.
+    Handles DIDRS trade lifecycle.
+
     Batch-1:
-        • Entry confirmation only.
+        • Pending BUY signal
+        • Next candle confirmation
     """
 
     def __init__(self):
 
+        self._pending_signal: Signal | None = None
+
         self.current_trade: Trade | None = None
 
-    def confirm_entry(
+    def register_signal(
         self,
         signal: Signal,
-        previous_high: float,
-        current_high: float,
-    ) -> Trade | None:
+    ) -> None:
         """
-        Confirm BUY only if the next candle
-        breaks the previous candle HIGH.
+        Store BUY signal.
+
+        Entry is NOT taken immediately.
         """
 
-        if current_high <= previous_high:
+        self._pending_signal = signal
+
+    def process_next_candle(
+        self,
+        previous: SynchronizedCandle,
+        current: SynchronizedCandle,
+    ) -> Trade | None:
+        """
+        Confirm BUY only when
+        current candle breaks
+        previous candle HIGH.
+        """
+
+        if self._pending_signal is None:
+            return None
+
+        if current.spot.high <= previous.spot.high:
             return None
 
         trade = Trade(
             symbol="NIFTY",
-            entry_time=signal.timestamp,
-            entry_price=signal.price,
+            entry_time=current.spot.timestamp,
+            entry_price=current.option.close,
             quantity=1,
         )
 
         self.current_trade = trade
+
+        self._pending_signal = None
 
         return trade

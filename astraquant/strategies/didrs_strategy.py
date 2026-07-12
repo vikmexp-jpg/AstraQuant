@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from astraquant.core.models import (
+    Candle,
     Signal,
     SignalType,
 )
 from typing import TYPE_CHECKING
+from astraquant.utils import VolumeAnalyzer
 
 if TYPE_CHECKING:
     from astraquant.engine import SynchronizedCandle
@@ -25,11 +27,12 @@ class DIDRSStrategy:
         self.minimum_volume = minimum_volume
 
     def evaluate(
-        self,
-        context: SynchronizedCandle,
-        expected_premium: float,
-        strike: int,
-    ) -> Signal | None:
+            self,
+            context: SynchronizedCandle,
+            expected_premium: float,
+            strike: int,
+            previous_option_candles: list[Candle],
+        ) -> Signal | None:
 
         option = context.option
         spot = context.spot
@@ -45,7 +48,13 @@ class DIDRSStrategy:
         if discount < self.minimum_discount:
             return None
 
-        if option.volume < self.minimum_volume:
+        if len(previous_option_candles) < 5:
+            return None
+
+        if not VolumeAnalyzer.is_volume_confirmed(
+            previous_option_candles,
+            option,
+        ):
             return None
 
         return Signal(

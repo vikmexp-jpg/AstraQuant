@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from astraquant.core.models import Candle
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class SynchronizedCandle:
     """
     Pair of spot and option candles having the same timestamp.
     """
     spot: Candle
     option: Candle
+    previous_option_candles: list[Candle] = field(default_factory=list)
 
 
 class CandleSynchronizer:

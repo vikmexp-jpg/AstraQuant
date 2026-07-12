@@ -30,12 +30,52 @@ def test_buy_signal():
 
     strategy = DIDRSStrategy()
 
+    history = [
+        candle(210, 190, 100),
+        candle(210, 190, 120),
+        candle(210, 190, 140),
+        candle(210, 190, 160),
+        candle(210, 190, 180),
+    ]
+
     signal = strategy.evaluate(
         context=context,
         expected_premium=220,
         strike=23500,
+        previous_option_candles=history,
     )
 
     assert signal is not None
 
     assert signal.signal == SignalType.BUY
+
+def test_buy_signal_rejected_due_to_low_volume():
+
+    spot = candle(100, 95, 1000)
+
+    # Current option volume = 130
+    option = candle(210, 190, 130)
+
+    context = SynchronizedCandle(
+        spot=spot,
+        option=option,
+    )
+
+    history = [
+        candle(210, 190, 100),
+        candle(210, 190, 120),
+        candle(210, 190, 140),
+        candle(210, 190, 160),
+        candle(210, 190, 180),
+    ]
+
+    strategy = DIDRSStrategy()
+
+    signal = strategy.evaluate(
+        context=context,
+        expected_premium=220,
+        strike=23500,
+        previous_option_candles=history,
+    )
+
+    assert signal is None

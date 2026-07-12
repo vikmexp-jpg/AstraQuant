@@ -103,11 +103,19 @@ class BacktestEngine:
                 current.spot,
                 strike,
             )
+            
+            history = [
+                candles[i].option
+                for i in range(max(0, index - 5), index)
+            ]
+
+            current.previous_option_candles = history
 
             signal = self.strategy.evaluate(
                 context=current,
                 expected_premium=expected,
                 strike=strike,
+                previous_option_candles=history,
             )
 
             if signal is None:

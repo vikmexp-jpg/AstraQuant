@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .candle import Candle
+from dataclasses import field
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,3 +21,4 @@ class StrategyContext:
     expected_premium: float
 
     discount: float
+    previous_option_candles: list[Candle] = field(default_factory=list)

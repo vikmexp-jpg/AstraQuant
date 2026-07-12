@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from .trade_event import TradeEvent
 
 
 class TradeStatus(Enum):
@@ -31,6 +32,9 @@ class Trade:
     exit_price: float | None = None
 
     pnl: float = 0.0
+    events: list[TradeEvent] = field(
+        default_factory=list,
+    )
 
     def close(
         self,

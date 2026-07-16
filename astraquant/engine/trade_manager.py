@@ -96,6 +96,14 @@ class TradeManager:
 
             self._trailing_stop = entry
             old_stop = self._trailing_stop
+            self.current_trade.events.append(
+                TradeEvent(
+                    timestamp=current.spot.timestamp,
+                    event=TradeEventType.TARGET_50,
+                    price=price,
+                    quantity=self.current_trade.quantity // 2,
+                )
+            )
 
             new_stop = price - 10
 
@@ -158,6 +166,14 @@ class TradeManager:
         )
 
         self.current_trade = trade
+        trade.events.append(
+            TradeEvent(
+                timestamp=current.spot.timestamp,
+                event=TradeEventType.ENTRY,
+                price=current.option.close,
+                quantity=1,
+            )
+        )
         self.trade_events.append(
             TradeEvent(
                 timestamp=current.spot.timestamp,

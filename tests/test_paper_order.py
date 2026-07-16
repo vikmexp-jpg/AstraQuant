@@ -1,28 +1,17 @@
 from astraquant.broker import (
     BrokerOrder,
-    BrokerPosition,
-    MarketQuote,
-)
-
-from astraquant.broker import (
-    BrokerOrder,
     Instrument,
     OrderSide,
     OrderType,
     ProductType,
+    TradingMode,
+)
+from astraquant.broker.upstox.order_service import (
+    UpstoxOrderService,
 )
 
-def test_market_quote():
 
-    quote = MarketQuote(
-        instrument="NIFTY",
-        ltp=25000,
-    )
-
-    assert quote.ltp == 25000
-
-
-def test_order():
+def test_paper_order():
 
     instrument = Instrument(
         instrument_key="NSE_FO|57340",
@@ -41,20 +30,13 @@ def test_order():
         side=OrderSide.BUY,
         order_type=OrderType.MARKET,
         product=ProductType.INTRADAY,
-        price=250,
     )
 
-    assert order.side == OrderSide.BUY
-    assert order.quantity == 65
-    assert order.price == 250
-
-
-def test_position():
-
-    position = BrokerPosition(
-        instrument="NIFTY",
-        quantity=2,
-        average_price=200,
+    service = UpstoxOrderService(
+        api_client=None,
+        mode=TradingMode.PAPER,
     )
 
-    assert position.quantity == 2
+    order_id = service.place(order)
+
+    assert order_id == "PAPER-ORDER-001"

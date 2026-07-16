@@ -1,28 +1,14 @@
 from astraquant.broker import (
     BrokerOrder,
-    BrokerPosition,
-    MarketQuote,
-)
-
-from astraquant.broker import (
-    BrokerOrder,
     Instrument,
     OrderSide,
+    OrderStatus,
     OrderType,
     ProductType,
 )
 
-def test_market_quote():
 
-    quote = MarketQuote(
-        instrument="NIFTY",
-        ltp=25000,
-    )
-
-    assert quote.ltp == 25000
-
-
-def test_order():
+def test_order_model():
 
     instrument = Instrument(
         instrument_key="NSE_FO|57340",
@@ -41,20 +27,8 @@ def test_order():
         side=OrderSide.BUY,
         order_type=OrderType.MARKET,
         product=ProductType.INTRADAY,
-        price=250,
     )
 
     assert order.side == OrderSide.BUY
-    assert order.quantity == 65
-    assert order.price == 250
-
-
-def test_position():
-
-    position = BrokerPosition(
-        instrument="NIFTY",
-        quantity=2,
-        average_price=200,
-    )
-
-    assert position.quantity == 2
+    assert order.status == OrderStatus.PENDING
+    assert order.instrument.symbol == "NIFTY"

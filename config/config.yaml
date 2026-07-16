@@ -17,6 +17,8 @@ logging:
   file: logs/astraquant.log
 
 trading:
+  mode: PAPER
+  
   symbol: "NIFTY"
 
   quantity: 1

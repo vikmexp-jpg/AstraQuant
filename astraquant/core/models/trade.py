@@ -46,6 +46,17 @@ class Trade:
         self.exit_time = exit_time
 
         self.exit_price = exit_price
+
+        if not any(event.event == TradeEventType.ENTRY for event in self.events):
+            self.events.append(
+                TradeEvent(
+                    timestamp=self.entry_time,
+                    event=TradeEventType.ENTRY,
+                    price=self.entry_price,
+                    quantity=self.quantity,
+                )
+            )
+
         self.events.append(
             TradeEvent(
                 timestamp=exit_time,
@@ -56,6 +67,39 @@ class Trade:
         )
         self.status = TradeStatus.CLOSED
 
-        self.pnl = (
-            exit_price - self.entry_price
-        ) * self.quantity
+        self.pnl = self.calculate_realized_pnl()
+
+    def calculate_realized_pnl(self) -> float:
+        """
+        Calculate realized P&L using trade events.
+        """
+
+        if not self.events:
+            return self.pnl
+
+        entry_event = next(
+            (
+                event
+                for event in self.events
+                if event.event.name == "ENTRY"
+            ),
+            None,
+        )
+
+        if entry_event is None:
+            return self.pnl
+
+        entry_price = entry_event.price
+        realized = 0.0
+
+        for event in self.events:
+
+            if event.event.name in (
+                "TARGET_50",
+                "FINAL_EXIT",
+            ):
+                realized += (
+                    event.price - entry_price
+                ) * event.quantity
+
+        return realized

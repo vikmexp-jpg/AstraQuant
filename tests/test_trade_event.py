@@ -6,8 +6,10 @@ from astraquant.core.models import (
 )
 from datetime import datetime
 
+
 from astraquant.core.models import (
     Trade,
+    TradeEvent,
     TradeEventType,
 )
 
@@ -40,3 +42,42 @@ def test_trade_records_final_exit():
     )
 
     assert trade.events[-1].event == TradeEventType.FINAL_EXIT
+
+
+def test_realized_pnl_from_events():
+
+    trade = Trade(
+        symbol="NIFTY",
+        entry_time=datetime.now(),
+        entry_price=100,
+        quantity=2,
+    )
+
+    trade.events.append(
+        TradeEvent(
+            timestamp=datetime.now(),
+            event=TradeEventType.ENTRY,
+            price=100,
+            quantity=2,
+        )
+    )
+
+    trade.events.append(
+        TradeEvent(
+            timestamp=datetime.now(),
+            event=TradeEventType.TARGET_50,
+            price=130,
+            quantity=1,
+        )
+    )
+
+    trade.events.append(
+        TradeEvent(
+            timestamp=datetime.now(),
+            event=TradeEventType.FINAL_EXIT,
+            price=120,
+            quantity=1,
+        )
+    )
+
+    assert trade.calculate_realized_pnl() == 50

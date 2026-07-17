@@ -19,3 +19,4 @@ build/
 .env
 *.env
 config/secrets.env
+astraquant/config/telegram_config.py

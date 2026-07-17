@@ -1,6 +1,7 @@
 from datetime import datetime
 import time
 
+from astraquant.alerts.telegram_alert import TelegramAlert
 from astraquant.broker.upstox import UpstoxBroker
 from astraquant.scanners.discount_scanner import DiscountScanner
 from astraquant.config.index_config import INDEX_CONFIG
@@ -11,10 +12,8 @@ from astraquant.alerts.alert import Alert
 from astraquant.alerts.alert_engine import AlertEngine
 from plyer import notification
 
-
 broker = UpstoxBroker()
 scanner = DiscountScanner(broker)
-
 
 def next_scan_time(now: datetime) -> datetime:
     """
@@ -71,7 +70,6 @@ while True:
         print(f"Sleeping    : {hours}h {minutes}m")
 
         time.sleep(max(1, sleep_seconds))
-
         continue
 
         target = CandleScheduler.next_close(
@@ -119,6 +117,5 @@ while True:
                 timestamp=result.top_discounts[0].timestamp if result.top_discounts else datetime.now(),
                 signal=signal.action,
             )
-
 
             AlertEngine.notify(alert)

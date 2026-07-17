@@ -4,6 +4,7 @@ from .console_alert import ConsoleAlert
 from .windows_alert import WindowsAlert
 from astraquant.alerts import alert
 from .sound_alert import SoundAlert
+from .telegram_alert import TelegramAlert
 
 
 class AlertEngine:
@@ -22,6 +23,7 @@ class AlertEngine:
         if alert.signal == "BUY":
             SoundAlert.buy()
         WindowsAlert.send(alert)
+        TelegramAlert.send(alert)
 
         AlertState.last_action[
             alert.symbol

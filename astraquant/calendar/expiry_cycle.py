@@ -19,15 +19,23 @@ class ExpiryCycle:
     allow_new_trade: bool
 
     @staticmethod
-    def current():
+    def current(
+        expiry_weekday: int,
+    ):
 
         now = datetime.now().astimezone()
 
         today = now.date()
 
-        previous_expiry = ExpiryCalendar.previous_expiry(today)
+        previous_expiry = ExpiryCalendar.previous_expiry(
+            today,
+            expiry_weekday,
+        )
 
-        next_expiry = ExpiryCalendar.next_expiry(today)
+        next_expiry = ExpiryCalendar.next_expiry(
+            today,
+            expiry_weekday,
+        )
 
         # Scan starts from next trading day after expiry
         scan_day = previous_expiry + timedelta(days=1)
@@ -38,10 +46,12 @@ class ExpiryCycle:
             tzinfo=now.tzinfo,
         )
 
-        # Trading rule
         allow_trade = True
 
-        if ExpiryCalendar.is_expiry_day(today):
+        if ExpiryCalendar.is_expiry_day(
+            today,
+            expiry_weekday,
+        ):
 
             cutoff = datetime.combine(
                 today,
@@ -65,6 +75,9 @@ class ExpiryCycle:
                 time(),
                 tzinfo=now.tzinfo,
             ),
-            is_expiry_day=ExpiryCalendar.is_expiry_day(today),
+            is_expiry_day=ExpiryCalendar.is_expiry_day(
+                today,
+                expiry_weekday,
+            ),
             allow_new_trade=allow_trade,
         )

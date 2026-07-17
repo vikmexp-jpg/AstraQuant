@@ -4,6 +4,7 @@ from astraquant.pricing.intrinsic import OptionPricing
 from astraquant.pricing.strike_selector import StrikeSelector
 from astraquant.scanners.candle_matcher import CandleMatcher
 from astraquant.calendar.expiry_cycle import ExpiryCycle
+from astraquant.config.index_config import INDEX_CONFIG
 
 
 class DiscountScanner:
@@ -14,13 +15,23 @@ class DiscountScanner:
 
     def scan(
         self,
-        spot_key: str,
         symbol: str = "NIFTY",
         option_type: str = "CE",
         interval: str = "5minute",
         threshold: float = 5.0,
     ):
-        cycle = ExpiryCycle.current()
+        config = INDEX_CONFIG[symbol]
+        cycle = ExpiryCycle.current(
+            expiry_weekday=config["expiry_weekday"],
+        )
+        
+        print("=" * 100)
+        print("DIDRS DISCOUNT SCANNER")
+        print("=" * 100)
+        print(f"Index          : {symbol}")
+        print(f"Option Type    : {option_type}")
+        print(f"Time Frame     : {interval}")
+        print("=" * 100)
         start = cycle.scan_start
         end = cycle.scan_end
         if cycle.is_expiry_day and not cycle.allow_new_trade:
@@ -46,7 +57,7 @@ class DiscountScanner:
 
 
         spot = self.broker.history.get_historical_candles(
-            instrument_key=spot_key,
+            instrument_key=config["spot_key"],
             interval=interval,
             to_date=end.strftime("%Y-%m-%d"),
             start_datetime=start,
@@ -58,17 +69,20 @@ class DiscountScanner:
             return
 
         latest_spot = spot[-1].close
+        print(f"Latest Candle Time : {spot[-1].timestamp}")
+        print(f"Latest Spot        : {latest_spot}")
 
         strike = StrikeSelector.deep_itm_call(
             spot=latest_spot,
-            levels=2,
+            offset=config["anchor_interval"],
         )
 
         print(f"Latest Spot : {latest_spot:.2f}")
         print(f"Selected Strike : {strike}")
+        print(f"Anchor Interval : {config['anchor_interval']}")
 
         instrument = self.broker.instruments.find_option(
-            symbol=symbol,
+            symbol=config["option_prefix"],
             strike=strike,
             option_type=option_type,
         )
@@ -98,7 +112,14 @@ class DiscountScanner:
             spot,
             option,
         )
+        print("\nFirst 5 Spot candles")
+        for c in spot[:5]:
+            print(c.timestamp)
 
+        print("\nFirst 5 Option candles")
+        for c in option[:5]:
+            print(c.timestamp)
+            
         print(f"Matched Candles : {len(matched)}")
 
         print("\nFirst 10 matched candles:\n")
@@ -141,6 +162,13 @@ class DiscountScanner:
                 option_price=option_candle.close,
                 option_type=option_type,
             )
+#            print(
+#                f"{spot_candle.timestamp.strftime('%H:%M')}  "
+#                f"Spot={spot_candle.close:.2f}  "
+#                f"Option={option_candle.close:.2f}  "
+#                f"Intrinsic={intrinsic:.2f}  "
+#                f"Discount={discount:.2f}"
+#            )
 
             if discount >= threshold:
 

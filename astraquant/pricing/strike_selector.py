@@ -3,56 +3,60 @@ from __future__ import annotations
 
 class StrikeSelector:
     """
-    Strike selection based on AstraQuant strategy.
-    Valid anchor strikes:
-    23000, 23500, 24000, 24500...
+    Generic Strike Selector using floor-based anchor levels.
     """
 
     @staticmethod
-    def nearest_500(
+    def anchor_strike(
         spot: float,
+        offset: int,
     ) -> int:
         """
-        Floor to nearest 500.
+        Floor to the nearest anchor.
 
         Examples:
-        24081 -> 24000
-        24399 -> 24000
-        24501 -> 24500
+
+        offset = 500
+            24081 -> 24000
+            24563 -> 24500
+
+        offset = 1000
+            82962 -> 82000
+            83580 -> 83000
         """
 
-        return int(spot // 500) * 500
+        return int(spot // offset) * offset
 
     @staticmethod
     def deep_itm_call(
         spot: float,
-        levels: int = 1,
+        offset: int,
     ) -> int:
         """
-        Deep ITM Call.
-
-        levels=1 -> current 500 strike
-        levels=2 -> one level below
+        One anchor below.
         """
 
         return (
-            StrikeSelector.nearest_500(spot)
-            - (levels - 1) * 500
+            StrikeSelector.anchor_strike(
+                spot,
+                offset,
+            )
+            - offset
         )
 
     @staticmethod
     def deep_itm_put(
         spot: float,
-        levels: int = 1,
+        offset: int,
     ) -> int:
         """
-        Deep ITM Put.
-
-        levels=1 -> current 500 strike
-        levels=2 -> one level above
+        One anchor above.
         """
 
         return (
-            StrikeSelector.nearest_500(spot)
-            + (levels - 1) * 500
+            StrikeSelector.anchor_strike(
+                spot,
+                offset,
+            )
+            + offset
         )

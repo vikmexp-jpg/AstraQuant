@@ -6,7 +6,6 @@ broker = UpstoxBroker()
 scanner = DiscountScanner(broker)
 
 scanner.scan(
-    spot_key="NSE_INDEX|Nifty 50",
     symbol="NIFTY",
     option_type="CE",
     interval="5minute",

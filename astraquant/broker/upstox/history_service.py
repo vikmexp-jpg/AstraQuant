@@ -82,14 +82,37 @@ class UpstoxHistoryService:
 
         response = self.history_api.get_historical_candle_data(
             instrument_key=instrument_key,
-            interval=api_interval,
+            interval="1minute",
             to_date=to_date,
             api_version="2.0",
         )
 
+        raw_candles = list(response.data.candles)
+
+        # -------------------------------------------------------
+        # If scan window includes today, append today's intraday.
+        # -------------------------------------------------------
+
+        today = datetime.now().astimezone().date()
+
+        if (
+            end_datetime is not None
+            and end_datetime.date() == today
+        ):
+
+            intraday = self.history_api.get_intra_day_candle_data(
+                instrument_key=instrument_key,
+                interval="1minute",
+                api_version="2.0",
+            )
+
+            raw_candles.extend(
+                intraday.data.candles
+            )
+
         candles = []
 
-        for item in response.data.candles:
+        for item in raw_candles:
 
             candle = Candle(
                 timestamp=datetime.fromisoformat(item[0]),
@@ -110,7 +133,24 @@ class UpstoxHistoryService:
 
             candles.append(candle)
 
-        candles.reverse()
+        # -------------------------------------------------------
+        # Remove duplicate timestamps
+        # -------------------------------------------------------
+
+        unique = {}
+
+        for candle in candles:
+            unique[candle.timestamp] = candle
+
+        candles = list(unique.values())
+
+        # -------------------------------------------------------
+        # Chronological order
+        # -------------------------------------------------------
+
+        candles.sort(
+            key=lambda c: c.timestamp
+        )
 
         if aggregation is not None:
             candles = CandleAggregator.aggregate(

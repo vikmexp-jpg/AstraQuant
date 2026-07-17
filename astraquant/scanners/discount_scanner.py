@@ -3,7 +3,7 @@ from __future__ import annotations
 from astraquant.pricing.intrinsic import OptionPricing
 from astraquant.pricing.strike_selector import StrikeSelector
 from astraquant.scanners.candle_matcher import CandleMatcher
-from datetime import datetime
+from astraquant.calendar.expiry_cycle import ExpiryCycle
 
 
 class DiscountScanner:
@@ -17,22 +17,37 @@ class DiscountScanner:
         spot_key: str,
         symbol: str = "NIFTY",
         option_type: str = "CE",
+        interval: str = "5minute",
         threshold: float = 5.0,
     ):
+        cycle = ExpiryCycle.current()
+        start = cycle.scan_start
+        end = cycle.scan_end
+        if cycle.is_expiry_day and not cycle.allow_new_trade:
 
+            print()
+            print("=" * 100)
+            print("DIDRS ENTRY BLOCKED")
+            print("Reason : Expiry day after 11:00 AM")
+            print("=" * 100)
+            print()
+
+            return
         print("=" * 100)
         print("Downloading Spot History...")
+        print(f"Previous Expiry : {cycle.previous_expiry.date()}")
+        print(f"Next Expiry     : {cycle.next_expiry.date()}")
+        print(f"Scan Start      : {start}")
+        print(f"Scan End        : {end}")
+        print(f"Trade Allowed   : {cycle.allow_new_trade}")
+        print("=" * 100)
 
 
 
-        start = datetime.fromisoformat(
-            "2026-07-15T14:00:00+05:30"
-        )
-
-        end = datetime.now().astimezone()
 
         spot = self.broker.history.get_historical_candles(
             instrument_key=spot_key,
+            interval=interval,
             to_date=end.strftime("%Y-%m-%d"),
             start_datetime=start,
             end_datetime=end,
@@ -64,6 +79,7 @@ class DiscountScanner:
 
         option = self.broker.history.get_historical_candles(
             instrument_key=instrument["instrument_key"],
+            interval=interval,
             to_date=end.strftime("%Y-%m-%d"),
             start_datetime=start,
             end_datetime=end,

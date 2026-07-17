@@ -68,13 +68,21 @@ class UpstoxHistoryService:
         self,
         instrument_key: str,
         to_date: str,
+        interval: str = "1minute",
         start_datetime: datetime | None = None,
         end_datetime: datetime | None = None,
     ) -> list[Candle]:
 
+        api_interval = interval
+        aggregation = None
+
+        if interval == "5minute":
+            api_interval = "1minute"
+            aggregation = 5
+
         response = self.history_api.get_historical_candle_data(
             instrument_key=instrument_key,
-            interval="1minute",
+            interval=api_interval,
             to_date=to_date,
             api_version="2.0",
         )
@@ -103,5 +111,11 @@ class UpstoxHistoryService:
             candles.append(candle)
 
         candles.reverse()
+
+        if aggregation is not None:
+            candles = CandleAggregator.aggregate(
+                candles,
+                aggregation,
+            )
 
         return candles

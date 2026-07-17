@@ -5,6 +5,8 @@ from astraquant.pricing.strike_selector import StrikeSelector
 from astraquant.scanners.candle_matcher import CandleMatcher
 from astraquant.calendar.expiry_cycle import ExpiryCycle
 from astraquant.config.index_config import INDEX_CONFIG
+from astraquant.scanners.models.scan_result import ScanResult
+from astraquant.scanners.models.discount_event import DiscountEvent
 
 
 class DiscountScanner:
@@ -17,21 +19,19 @@ class DiscountScanner:
         self,
         symbol: str = "NIFTY",
         option_type: str = "CE",
-        interval: str = "5minute",
+        interval: str = "5 minute",
         threshold: float = 5.0,
     ):
         config = INDEX_CONFIG[symbol]
         cycle = ExpiryCycle.current(
             expiry_weekday=config["expiry_weekday"],
         )
-        
         print("=" * 100)
+        print()
         print("DIDRS DISCOUNT SCANNER")
-        print("=" * 100)
-        print(f"Index          : {symbol}")
-        print(f"Option Type    : {option_type}")
-        print(f"Time Frame     : {interval}")
-        print("=" * 100)
+        print(f"Index             : {symbol}")
+        #print(f"Option Type    : {option_type}")
+        #print(f"Time Frame     : {interval}")
         start = cycle.scan_start
         end = cycle.scan_end
         if cycle.is_expiry_day and not cycle.allow_new_trade:
@@ -44,17 +44,6 @@ class DiscountScanner:
             print()
 
             return
-        print("=" * 100)
-        print("Downloading Spot History...")
-        print(f"Previous Expiry : {cycle.previous_expiry.date()}")
-        print(f"Next Expiry     : {cycle.next_expiry.date()}")
-        print(f"Scan Start      : {start}")
-        print(f"Scan End        : {end}")
-        print(f"Trade Allowed   : {cycle.allow_new_trade}")
-        print("=" * 100)
-
-
-
 
         spot = self.broker.history.get_historical_candles(
             instrument_key=config["spot_key"],
@@ -69,17 +58,17 @@ class DiscountScanner:
             return
 
         latest_spot = spot[-1].close
-        print(f"Latest Candle Time : {spot[-1].timestamp}")
-        print(f"Latest Spot        : {latest_spot}")
+        #print(f"Latest Candle Time : {spot[-1].timestamp}")
+        #print(f"Latest Spot        : {latest_spot}")
 
         strike = StrikeSelector.deep_itm_call(
             spot=latest_spot,
             offset=config["anchor_interval"],
         )
 
-        print(f"Latest Spot : {latest_spot:.2f}")
-        print(f"Selected Strike : {strike}")
-        print(f"Anchor Interval : {config['anchor_interval']}")
+        #print(f"Latest Spot : {latest_spot:.2f}")
+        #print(f"Selected Strike : {strike}")
+        #print(f"Anchor Interval : {config['anchor_interval']}")
 
         instrument = self.broker.instruments.find_option(
             symbol=config["option_prefix"],
@@ -87,9 +76,9 @@ class DiscountScanner:
             option_type=option_type,
         )
 
-        print(f"Option : {instrument['trading_symbol']}")
+        print(f"Option            : {instrument['trading_symbol']}")
 
-        print("Downloading Option History...")
+        #print("Downloading Option History...")
 
         option = self.broker.history.get_historical_candles(
             instrument_key=instrument["instrument_key"],
@@ -98,55 +87,15 @@ class DiscountScanner:
             start_datetime=start,
             end_datetime=end,
         )
-
-        print("=" * 100)
-        print("Scan Window")
-        print(f"Start : {start}")
-        print(f"End   : {end}")
-        print("=" * 100)
-
-        print(f"Spot Candles   : {len(spot)}")
-        print(f"Option Candles : {len(option)}")
-
+        print(f"Scan Window       : {start.strftime('%Y-%m-%d %H:%M')} -> {end.strftime('%Y-%m-%d %H:%M')}")
         matched = CandleMatcher.match(
             spot,
             option,
         )
-        print("\nFirst 5 Spot candles")
-        for c in spot[:5]:
-            print(c.timestamp)
-
-        print("\nFirst 5 Option candles")
-        for c in option[:5]:
-            print(c.timestamp)
-            
-        print(f"Matched Candles : {len(matched)}")
-
-        print("\nFirst 10 matched candles:\n")
-
-        for spot_candle, option_candle in matched[:10]:
-            print(
-                spot_candle.timestamp,
-                " | ",
-                option_candle.timestamp,
-            )
-
-        print("=" * 100)
-        print(
-            f"{'Time':<8}"
-            f"{'Spot':>12}"
-            f"{'Option':>12}"
-            f"{'Intrinsic':>14}"
-            f"{'Discount':>14}"
-        )
-        print("=" * 100)
 
         count = 0
-        max_discount = float("-inf")
-        best_spot = None
-        best_option = None
-        best_time = None
-        best_intrinsic = None
+        current_discount = 0.0
+        top_discounts = []
 
         for spot_candle, option_candle in matched:
 
@@ -162,47 +111,61 @@ class DiscountScanner:
                 option_price=option_candle.close,
                 option_type=option_type,
             )
-#            print(
-#                f"{spot_candle.timestamp.strftime('%H:%M')}  "
-#                f"Spot={spot_candle.close:.2f}  "
-#                f"Option={option_candle.close:.2f}  "
-#                f"Intrinsic={intrinsic:.2f}  "
-#                f"Discount={discount:.2f}"
-#            )
+            
+            current_discount = discount
 
             if discount >= threshold:
 
                 count += 1
 
-                if discount > max_discount:
-                    max_discount = discount
-                    best_time = spot_candle.timestamp
-                    best_spot = spot_candle.close
-                    best_option = option_candle.close
-                    best_intrinsic = intrinsic
-
-                print(
-                    f"{spot_candle.timestamp.strftime('%Y-%m-%d %H:%M'):<20}"
-                    f"{spot_candle.close:>12.2f}"
-                    f"{option_candle.close:>12.2f}"
-                    f"{intrinsic:>14.2f}"
-                    f"{discount:>14.2f}"
+                top_discounts.append(
+                    DiscountEvent(
+                        timestamp=spot_candle.timestamp,
+                        spot=spot_candle.close,
+                        option=option_candle.close,
+                        intrinsic=intrinsic,
+                        discount=discount,
+                    )
                 )
+                
+        top_discounts.sort(
+            key=lambda x: x.discount,
+            reverse=True,
+        )
 
-        print("=" * 100)
-        print(f"Occurrences      : {count}")
+        top_discounts = top_discounts[:2]
+        print(f"Current Spot      : {latest_spot:.2f}")
+        print(f"Current Discount  : {current_discount:.2f}")
+        #print(f"Occurrences       : {count}")
 
-        if count:
-
-            print(f"Maximum Discount : {max_discount:.2f}")
+        if top_discounts:
 
             print()
-            print("BEST DISCOUNT")
-            print("-" * 40)
-            print(f"Time       : {best_time}")
-            print(f"Spot       : {best_spot:.2f}")
-            print(f"Option     : {best_option:.2f}")
-            print(f"Intrinsic  : {best_intrinsic:.2f}")
-            print(f"Discount   : {max_discount:.2f}")
+            print(
+                f"{'Time':<8}"
+                f"{'Spot':>20}"
+                f"{'Option':>16}"
+                f"{'Intrinsic':>17}"
+                f"{'Discount':>14}"
+            )
+            print("-" * 80)
 
-        print("=" * 100)
+            for rank, item in enumerate(top_discounts, start=1):
+
+                print(
+                    f"{item.timestamp.strftime('%Y-%m-%d %H:%M'):<20}"
+                    f"{item.spot:>12.2f}"
+                    f"{item.option:>12.2f}"
+                    f"{item.intrinsic:>14.2f}"
+                    f"{item.discount:>14.2f}"
+                )
+
+        return ScanResult(
+            symbol=symbol,
+            option_symbol=instrument["trading_symbol"],
+            strike=strike,
+            current_spot=latest_spot,
+            current_discount=current_discount,
+            occurrences=count,
+            top_discounts=top_discounts,
+        )

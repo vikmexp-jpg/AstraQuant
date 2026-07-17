@@ -10,6 +10,7 @@ from upstox_client.rest import ApiException
 from astraquant.broker.models import TradingMode
 from .instrument_service import UpstoxInstrumentService
 from .order_service import UpstoxOrderService
+from .history_service import UpstoxHistoryService
 
 from astraquant.broker import (
     Broker,
@@ -17,7 +18,11 @@ from astraquant.broker import (
     BrokerPosition,
     MarketQuote,
 )
+from pathlib import Path
 
+from astraquant.instruments.repository import (
+    InstrumentRepository,
+)
 
 class UpstoxBroker(Broker):
     """
@@ -56,6 +61,28 @@ class UpstoxBroker(Broker):
 
         self.market_api = upstox_client.MarketQuoteApi(
             self.api_client
+        )
+
+        self.history_api = upstox_client.HistoryApi(
+            self.api_client,
+        )
+
+        self.history = UpstoxHistoryService(
+            self.history_api,
+        )
+
+        project_root = Path(__file__).resolve().parents[3]
+
+        instrument_file = (
+            project_root
+            / "astraquant"
+            / "data"
+            / "instruments"
+            / "upstox.json"
+        )
+
+        self.instrument_repository = InstrumentRepository(
+            instrument_file,
         )
 
     def connect(self) -> None:
@@ -109,13 +136,11 @@ class UpstoxBroker(Broker):
         raise NotImplementedError(
             "Positions in Batch-3."
         )
-    @property
-    def instruments(self) -> UpstoxInstrumentService:
-        """
-        Access instrument lookup service.
-        """
-        return self.instrument_service
     
     @property
     def orders(self) -> UpstoxOrderService:
         return self.order_service
+    
+    @property
+    def instruments(self):
+        return self.instrument_repository

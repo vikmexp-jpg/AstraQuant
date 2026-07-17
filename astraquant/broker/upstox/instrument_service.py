@@ -37,13 +37,16 @@ class UpstoxInstrumentService(InstrumentService):
             "page_number": 1,
             "records": 10,
         }
-
+        print(headers)
         response = requests.get(
             "https://api.upstox.com/v2/instruments/search",
             headers=headers,
             params=params,
             timeout=10,
         )
+
+        print("Status Code :", response.status_code)
+        print("Response    :", response.text)
 
         response.raise_for_status()
 
@@ -53,7 +56,21 @@ class UpstoxInstrumentService(InstrumentService):
         if not data:
             raise LookupError("Instrument not found.")
 
-        item = data[0]
+        item = None
+
+        for instrument in data:
+
+            if (
+                instrument["strike_price"] == strike
+                and instrument["instrument_type"] == option_type
+            ):
+                item = instrument
+                break
+
+        if item is None:
+            raise LookupError(
+                f"{symbol} {strike} {option_type} not found."
+            )
 
         return Instrument(
             instrument_key=item["instrument_key"],

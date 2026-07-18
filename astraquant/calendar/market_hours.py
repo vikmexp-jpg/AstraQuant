@@ -16,13 +16,12 @@ class MarketHours:
         now: datetime,
     ) -> bool:
 
+        if now.weekday() >= 5:
+            return False
+
         current = now.time()
 
-        return (
-            MarketHours.OPEN
-            <= current
-            <= MarketHours.CLOSE
-        )
+        return MarketHours.OPEN <= current < MarketHours.CLOSE
 
     @staticmethod
     def next_market_open(

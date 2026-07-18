@@ -1,5 +1,8 @@
 from pathlib import Path
+import logging
 import winsound
+
+logger = logging.getLogger("AstraQuant")
 
 
 class SoundAlert:
@@ -16,20 +19,29 @@ class SoundAlert:
         sound = SoundAlert.SOUND_DIR / filename
 
         if sound.exists():
-
-            winsound.PlaySound(
-                str(sound),
-                winsound.SND_FILENAME | winsound.SND_ASYNC,
-            )
+            try:
+                logger.debug(f"Playing sound: {filename}")
+                winsound.PlaySound(
+                    str(sound),
+                    winsound.SND_FILENAME | winsound.SND_ASYNC,
+                )
+                logger.info(f"Sound played successfully: {filename}")
+            except Exception as e:
+                logger.error(f"Failed to play sound {filename}: {e}", exc_info=True)
+        else:
+            logger.warning(f"Sound file not found: {sound}")
 
     @staticmethod
     def buy():
+        logger.info("Playing buy alert sound")
         SoundAlert.play("buy.wav")
 
     @staticmethod
     def sell():
+        logger.info("Playing sell alert sound")
         SoundAlert.play("sell.wav")
 
     @staticmethod
     def error():
+        logger.warning("Playing error alert sound")
         SoundAlert.play("error.wav")

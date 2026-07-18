@@ -18,5 +18,9 @@ dependencies = [
     "python-dotenv"
 ]
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["astraquant*"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]

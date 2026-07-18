@@ -11,6 +11,7 @@ from astraquant.signals.didrs_signal import DidrsSignal
 from astraquant.alerts.alert import Alert
 from astraquant.alerts.alert_engine import AlertEngine
 from plyer import notification
+from astraquant.logger import logger
 
 broker = UpstoxBroker()
 scanner = DiscountScanner(broker)
@@ -40,9 +41,9 @@ def next_scan_time(now: datetime) -> datetime:
     )
 
 
-print("=" * 100)
-print("ASTRAQUANT LIVE DIDRS MONITOR")
-print("=" * 100)
+logger.info("-" * 60)
+logger.info("ASTRAQUANT LIVE DIDRS MONITOR")
+logger.info("-" * 60)
 
 while True:
 
@@ -69,8 +70,8 @@ while True:
         print(f"Next Open   : {next_open}")
         print(f"Sleeping    : {hours}h {minutes}m")
 
-        time.sleep(max(1, sleep_seconds))
-        continue
+        #time.sleep(max(1, sleep_seconds))
+        #continue
 
         target = CandleScheduler.next_close(
             now,
@@ -84,7 +85,7 @@ while True:
         print(f"Next Scan    : {target.strftime('%H:%M:%S')}")
         print(f"Sleeping     : {wait:.0f} sec")
 
-        time.sleep(wait)
+        time.sleep(10)
 
         print()
         print("=" * 100)
@@ -98,16 +99,18 @@ while True:
             if not config["scan_enabled"]:
                 continue
 
+            threshold = config.get("discount_threshold", 5.0)
+
             result = scanner.scan(
                 symbol=symbol,
                 option_type="CE",
                 interval="5minute",
-                threshold=5,
+                threshold=threshold,
             )
             #print(result)
             signal = DidrsSignal.generate(
                 current_discount=result.current_discount,
-                threshold=5,
+                threshold=threshold,
             )
 
             alert = Alert(

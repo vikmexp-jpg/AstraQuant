@@ -17,7 +17,7 @@ for symbol, config in INDEX_CONFIG.items():
             symbol=symbol,
             option_type="CE",
             interval="5minute",
-            threshold=5,
+            threshold=config.get("discount_threshold", 5.0),
         )
 
     except Exception as ex:

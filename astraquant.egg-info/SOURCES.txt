@@ -41,8 +41,8 @@ astraquant/config/config_loader.py
 astraquant/config/config_service.py
 astraquant/config/exceptions.py
 astraquant/config/index_config.py
+astraquant/config/settings.py
 astraquant/config/telegram_config.example.py
-astraquant/config/telegram_config.py
 astraquant/core/interfaces/__init__.py
 astraquant/core/interfaces/data_provider.py
 astraquant/core/models/__init__.py
@@ -69,6 +69,8 @@ astraquant/instruments/downloader.py
 astraquant/instruments/models.py
 astraquant/instruments/repository.py
 astraquant/instruments/search.py
+astraquant/logger/__init__.py
+astraquant/logger/logger.py
 astraquant/pricing/__init__.py
 astraquant/pricing/intrinsic.py
 astraquant/pricing/strike_selector.py

@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from astraquant.config.settings import (
+    NIFTY_DISCOUNT_THRESHOLD,
+    SENSEX_DISCOUNT_THRESHOLD,
+)
+
 INDEX_CONFIG = {
 
     "NIFTY": {
@@ -17,7 +22,7 @@ INDEX_CONFIG = {
         "anchor_interval": 1000,
         "expiry_weekday": 3,   # ✅ Thursday (Monday=0, Tuesday=1, Wednesday=2, Thursday=3)
         "option_prefix": "SENSEX",
-        "discount_threshold": -200.0,
+        "discount_threshold": 30.0,
     },
 
     "BANKNIFTY": {
@@ -26,6 +31,12 @@ INDEX_CONFIG = {
         "anchor_interval": 1000,
         "expiry_weekday": 2,
         "option_prefix": "BANKNIFTY",
-        "discount_threshold": 5.0,
+        "discount_threshold": 20.0,
     },
 }
+
+if NIFTY_DISCOUNT_THRESHOLD is not None:
+    INDEX_CONFIG["NIFTY"]["discount_threshold"] = NIFTY_DISCOUNT_THRESHOLD
+
+if SENSEX_DISCOUNT_THRESHOLD is not None:
+    INDEX_CONFIG["SENSEX"]["discount_threshold"] = SENSEX_DISCOUNT_THRESHOLD

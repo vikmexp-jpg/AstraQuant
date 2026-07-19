@@ -7,6 +7,7 @@ from astraquant.calendar.expiry_cycle import ExpiryCycle
 from astraquant.config.index_config import INDEX_CONFIG
 from astraquant.scanners.models.scan_result import ScanResult
 from astraquant.scanners.models.discount_event import DiscountEvent
+from astraquant.logger import logger
 
 
 class DiscountScanner:
@@ -26,12 +27,10 @@ class DiscountScanner:
         cycle = ExpiryCycle.current(
             expiry_weekday=config["expiry_weekday"],
         )
-        print("=" * 100)
+        print("-" * 100)
         print()
         print("DIDRS DISCOUNT SCANNER")
         print(f"Index             : {symbol}")
-        #print(f"Option Type    : {option_type}")
-        #print(f"Time Frame     : {interval}")
         start = cycle.scan_start
         end = cycle.scan_end
         if cycle.is_expiry_day and not cycle.allow_new_trade:
@@ -44,7 +43,7 @@ class DiscountScanner:
             print()
 
             return
-
+        logger.debug("Downloading spot History...")
         spot = self.broker.history.get_historical_candles(
             instrument_key=config["spot_key"],
             interval=interval,
@@ -58,17 +57,11 @@ class DiscountScanner:
             return
 
         latest_spot = spot[-1].close
-        #print(f"Latest Candle Time : {spot[-1].timestamp}")
-        #print(f"Latest Spot        : {latest_spot}")
 
         strike = StrikeSelector.deep_itm_call(
             spot=latest_spot,
             offset=config["anchor_interval"],
         )
-
-        #print(f"Latest Spot : {latest_spot:.2f}")
-        #print(f"Selected Strike : {strike}")
-        #print(f"Anchor Interval : {config['anchor_interval']}")
 
         instrument = self.broker.instruments.find_option(
             symbol=config["option_prefix"],
@@ -77,8 +70,6 @@ class DiscountScanner:
         )
 
         print(f"Option            : {instrument['trading_symbol']}")
-
-        #print("Downloading Option History...")
 
         option = self.broker.history.get_historical_candles(
             instrument_key=instrument["instrument_key"],
@@ -136,7 +127,6 @@ class DiscountScanner:
         top_discounts = top_discounts[:2]
         print(f"Current Spot      : {latest_spot:.2f}")
         print(f"Current Discount  : {current_discount:.2f}")
-        #print(f"Occurrences       : {count}")
 
         if top_discounts:
 

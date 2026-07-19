@@ -14,26 +14,29 @@ class WindowsAlert:
 
     @staticmethod
     def send(alert: Alert) -> None:
-        title = f"{alert.signal} - {alert.symbol}"
+        title = f"{alert.option}"
         message = (
-            f"{alert.option}\n"
-            f"Time: {alert.timestamp}\n"
-            f"Discount : {alert.discount:.2f}"
+            f"Top Discount            Time\n"
+            f"-----------------------------------\n"
+            f"{alert.top_discount[0].discount:>0.2f} ---> "
+            f"{alert.top_discount[0].timestamp.strftime('%d-%b-%y %H:%M:%S')}\n"
+            f"{alert.top_discount[1].discount:>0.2f} ---> "
+            f"{alert.top_discount[1].timestamp.strftime('%d-%b-%y %H:%M:%S')}\n"
         )
 
-        logger.info(
+        logger.debug(
             "alert | event=windows_dispatch | symbol=%s | signal=%s | option=%s | discount=%.2f | status=sending",
             alert.symbol,
             alert.signal,
             alert.option,
-            alert.discount,
+            alert.top_discount[0].discount,
         )
 
         try:
             WindowsAlert._toaster.show_toast(
                 title,
                 message,
-                duration=60,
+                duration=5,
                 threaded=True,
             )
         except Exception as exc:
@@ -42,16 +45,16 @@ class WindowsAlert:
                 alert.symbol,
                 alert.signal,
                 alert.option,
-                alert.discount,
+                alert.top_discount[0].discount,
                 exc,
                 exc_info=True,
             )
             return
 
-        logger.info(
+        logger.debug(
             "alert | event=windows_delivery | symbol=%s | signal=%s | option=%s | discount=%.2f | status=delivered",
             alert.symbol,
             alert.signal,
             alert.option,
-            alert.discount,
+            alert.top_discount[0].discount,
         )

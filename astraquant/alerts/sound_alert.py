@@ -25,7 +25,7 @@ class SoundAlert:
                     str(sound),
                     winsound.SND_FILENAME | winsound.SND_ASYNC,
                 )
-                logger.info(f"Sound played successfully: {filename}")
+                logger.debug(f"Sound played successfully: {filename}")
             except Exception as e:
                 logger.error(f"Failed to play sound {filename}: {e}", exc_info=True)
         else:
@@ -33,7 +33,7 @@ class SoundAlert:
 
     @staticmethod
     def buy():
-        logger.info("Playing buy alert sound")
+        logger.debug("Playing buy alert sound")
         SoundAlert.play("buy.wav")
 
     @staticmethod

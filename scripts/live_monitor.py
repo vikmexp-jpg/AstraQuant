@@ -87,13 +87,6 @@ while True:
 
         time.sleep(10)
 
-        print()
-        print("=" * 100)
-        print(
-            f"Scanning at {datetime.now().strftime('%H:%M:%S')}"
-        )
-        print("=" * 100)
-
         for symbol, config in INDEX_CONFIG.items():
 
             if not config["scan_enabled"]:
@@ -107,7 +100,15 @@ while True:
                 interval="5minute",
                 threshold=threshold,
             )
-            #print(result)
+
+            # logger.info(
+            #     "alert | event=scan_completed | symbol=%s | option=%s | discount=%.2f | threshold=%.2f",
+            #     result.symbol,
+            #     result.option_symbol,
+            #     result.current_discount,
+            #     threshold,
+            # )
+
             signal = DidrsSignal.generate(
                 current_discount=result.current_discount,
                 threshold=threshold,
@@ -116,8 +117,9 @@ while True:
             alert = Alert(
                 symbol=result.symbol,
                 option=result.option_symbol,
-                discount=result.current_discount,
-                timestamp=result.top_discounts[0].timestamp if result.top_discounts else datetime.now(),
+                #timestamp=result.top_discounts[0].timestamp if result.top_discounts else datetime.now(),
+                top_discount=result.top_discounts,
+                current_discount=result.current_discount,
                 signal=signal.action,
             )
 

@@ -16,7 +16,7 @@ def _log_alert_event(event: str, alert: Alert, status: str, extra: str | None = 
         f"symbol={alert.symbol}",
         f"signal={alert.signal}",
         f"option={alert.option}",
-        f"discount={alert.discount:.2f}",
+        f"discount={alert.top_discount[0].discount:.2f}",
         f"status={status}",
     ]
     if extra:
@@ -28,13 +28,12 @@ class AlertEngine:
 
     @staticmethod
     def notify(alert: Alert):
-        if alert.signal not in {"BUY", "SELL"}:
-            logger.info(
+        if alert.signal not in {"BUY"}:
+            logger.debug(
                 "alert | event=ignored | symbol=%s | signal=%s | option=%s | discount=%.2f | status=skipped",
                 alert.symbol,
                 alert.signal,
                 alert.option,
-                alert.discount,
             )
             return
 
@@ -46,27 +45,27 @@ class AlertEngine:
                 alert.symbol,
                 alert.signal,
                 alert.option,
-                alert.discount,
+                alert.top_discount[0].discount,
             )
             return
 
-        _log_alert_event(
-            event="dispatch",
-            alert=alert,
-            status="processing",
-        )
+        # _log_alert_event(
+        #     event="dispatch",
+        #     alert=alert,
+        #     status="processing",
+        # )
         ConsoleAlert.send(alert)
 
         if alert.signal == "BUY":
-            logger.info("Playing buy sound for %s", alert.symbol)
+            logger.debug("Playing buy sound for %s", alert.symbol)
             SoundAlert.buy()
 
         WindowsAlert.send(alert)
         TelegramAlert.send(alert)
 
         AlertState.last_action[alert.symbol] = alert.signal
-        _log_alert_event(
-            event="delivery",
-            alert=alert,
-            status="delivered",
-        )
+        # _log_alert_event(
+        #     event="delivery",
+        #     alert=alert,
+        #     status="delivered",
+        # )

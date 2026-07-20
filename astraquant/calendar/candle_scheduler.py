@@ -17,28 +17,30 @@ class CandleScheduler:
         """
         Returns the next completed candle time.
 
-        Example:
+        Examples:
             09:17 -> 09:20:05
             09:20 -> 09:25:05
             15:27 -> 15:30:05
+            23:58 -> 00:00:05 (next day)
         """
 
-        minute = (
-            ((now.minute // interval) + 1)
-            * interval
+        # Remove seconds and microseconds
+        current = now.replace(
+            second=0,
+            microsecond=0,
         )
 
-        if minute >= 60:
+        # Minutes to the next interval
+        minutes_to_add = interval - (current.minute % interval)
 
-            return now.replace(
-                hour=now.hour + 1,
-                minute=0,
-                second=delay_seconds,
-                microsecond=0,
-            )
+        if minutes_to_add == 0:
+            minutes_to_add = interval
 
-        return now.replace(
-            minute=minute,
+        next_candle = current + timedelta(
+            minutes=minutes_to_add,
+        )
+
+        return next_candle.replace(
             second=delay_seconds,
             microsecond=0,
         )

@@ -1,90 +1,96 @@
 from __future__ import annotations
 
 import logging
-
 import requests
 
+from astraquant.alerts.alert import Alert
 from astraquant.config.settings import (
     TELEGRAM_BOT_TOKEN,
     TELEGRAM_CHAT_ID,
 )
-from astraquant.config.index_config import INDEX_CONFIG
-
-from .alert import Alert
 
 logger = logging.getLogger("AstraQuant")
-
 
 class TelegramAlert:
 
     @staticmethod
-    def send(alert: Alert):
-        #threshold = INDEX_CONFIG.get(alert.symbol, {}).get("discount_threshold", 10.0)
+    def send(alert: Alert) -> None:
 
-        # if alert.signal != "BUY" or alert.top_discount[0].discount <= threshold:
-        #     logger.debug(
-        #         "alert | event=telegram_ignored | symbol=%s | signal=%s | option=%s | discount=%.2f | threshold=%.2f | status=skipped",
-        #         alert.symbol,
-        #         alert.signal,
-        #         alert.option,
-        #         alert.top_discount[0].discount,
-        #         threshold,
-        #     )
-        #     return
+        opportunity = alert.opportunity
+        state = opportunity.state
 
-        signal_label = "💥 STRONG BUY"
+        #
+        # Header
+        #
+        headers = {
+            "NEW": "🟢 NEW OPPORTUNITY",
+            "IMPROVING": "🔥 OPPORTUNITY IMPROVING",
+            "WEAKENING": "🟡 OPPORTUNITY WEAKENING",
+            "RECOVERED": "✅ OPPORTUNITY CLOSED",
+            "STABLE": "ℹ️ OPPORTUNITY STABLE",
+        }
 
-        message_body = (
-            "🚀 ASTRAQUANT DIDRS\n\n"
-            f"{signal_label}\n\n"
-            f"Index        :  {alert.symbol}\n"
-            f"Option      :  {alert.option}\n"
-            f"Current Discount : {alert.current_discount:>0.2f}\n\n"
-            f"Top Discount            Time\n"
-            f"-----------------------------------\n"
-            f"{alert.top_discount[0].discount:>0.2f} ---> "
-            f"{alert.top_discount[0].timestamp.strftime('%d-%b-%y %H:%M:%S')}\n"
-            f"{alert.top_discount[1].discount:>0.2f} ---> "
-            f"{alert.top_discount[1].timestamp.strftime('%d-%b-%y %H:%M:%S')}\n"
+        header = headers.get(
+            state.name,
+            "ℹ️ OPPORTUNITY UPDATE",
         )
 
-        message = f"<pre>{message_body}</pre>"
+        #
+        # Opportunity Duration
+        #
+        duration = (
+            opportunity.last_updated
+            - opportunity.started_at
+        ).total_seconds() / 60
+
+        #
+        # Telegram Message
+        #
+        message_body = (
+            "🚀 <b>ASTRAQUANT DIDRS</b>\n\n"
+
+            f"{header}\n\n"
+
+            f"🆔 <b>Opportunity</b> : {opportunity.id}\n"
+            f"📈 <b>Index</b>         : {alert.symbol}\n"
+            f"📌 <b>Option</b>       : {opportunity.option}\n\n"
+
+            f"💰 <b>Current</b>      : {opportunity.current_discount:.2f}\n"
+            f"🚀 <b>Peak</b>          : {opportunity.max_discount:.2f}\n"
+            f"🏁 <b>Start</b>          : {opportunity.start_discount:.2f}\n\n"
+
+            f"⏱️ <b>Duration</b>     : {duration:.1f} min\n"
+            f"🕒 <b>Updated</b>     : "
+            f"{opportunity.last_updated.strftime('%H:%M:%S')}"
+        )
+
         url = (
             f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         )
-        logger.debug(
-            "alert | event=telegram_dispatch | symbol=%s | signal=%s | option=%s | discount=%.2f | status=sending",
-            alert.symbol,
-            alert.signal,
-            alert.option,
-            alert.top_discount[0].discount,
-        )
+
         try:
+
             response = requests.post(
                 url,
                 json={
                     "chat_id": TELEGRAM_CHAT_ID,
-                    "text": message,
+                    "text": message_body,
                     "parse_mode": "HTML",
                 },
                 timeout=10,
             )
 
             response.raise_for_status()
-            logger.debug(
-                "alert | event=telegram_delivery | symbol=%s | signal=%s | option=%s | discount=%.2f | status=delivered",
+
+            logger.info(
+                "[%s] Telegram %s delivered",
                 alert.symbol,
-                alert.signal,
-                alert.option,
-                alert.top_discount[0].discount,
+                state.value,
             )
-        except Exception as e:
-            logger.error(
-                "alert | event=telegram_delivery | symbol=%s | signal=%s | option=%s | discount=%.2f | status=failed | error=%s",
+
+        except Exception:
+
+            logger.exception(
+                "[%s] Telegram notification failed",
                 alert.symbol,
-                alert.signal,
-                alert.option,
-                alert.top_discount[0].discount,
-                e,
-                exc_info=True,
             )

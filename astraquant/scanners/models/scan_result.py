@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from .discount_event import DiscountEvent
 
@@ -14,9 +15,15 @@ class ScanResult:
 
     strike: int
 
-    current_spot: float
+    timestamp: datetime
 
-    current_discount: float
+    spot: float
+
+    option_price: float
+
+    intrinsic: float
+
+    discount: float
 
     occurrences: int
 

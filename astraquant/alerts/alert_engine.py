@@ -1,7 +1,8 @@
 import logging
 
+from astraquant.tracker.opportunity_state import OpportunityState
+
 from .alert import Alert
-from .alert_state import AlertState
 from .console_alert import ConsoleAlert
 from .windows_alert import WindowsAlert
 from .sound_alert import SoundAlert
@@ -28,44 +29,65 @@ class AlertEngine:
 
     @staticmethod
     def notify(alert: Alert):
-        if alert.signal not in {"BUY"}:
-            logger.debug(
-                "alert | event=ignored | symbol=%s | signal=%s | option=%s | discount=%.2f | status=skipped",
-                alert.symbol,
-                alert.signal,
-                alert.option,
-            )
+
+        state = alert.opportunity.state
+
+        #
+        # Ignore unchanged opportunities
+        #
+        if state in (
+            OpportunityState.STABLE,
+            OpportunityState.WEAKENING,
+        ):
             return
 
-        previous = AlertState.last_action.get(alert.symbol)
+        #
+        # New Opportunity
+        #
+        if state == OpportunityState.NEW:
 
-        if previous == alert.signal:
-            logger.debug(
-                "alert | event=duplicate | symbol=%s | signal=%s | option=%s | discount=%.2f | status=skipped",
-                alert.symbol,
-                alert.signal,
-                alert.option,
-                alert.top_discount[0].discount,
-            )
-            return
+            ConsoleAlert.send(alert)
 
-        # _log_alert_event(
-        #     event="dispatch",
-        #     alert=alert,
-        #     status="processing",
-        # )
-        ConsoleAlert.send(alert)
-
-        if alert.signal == "BUY":
-            logger.debug("Playing buy sound for %s", alert.symbol)
             SoundAlert.buy()
 
-        WindowsAlert.send(alert)
-        TelegramAlert.send(alert)
+            WindowsAlert.send(alert)
 
-        AlertState.last_action[alert.symbol] = alert.signal
-        # _log_alert_event(
-        #     event="delivery",
-        #     alert=alert,
-        #     status="delivered",
-        # )
+            TelegramAlert.send(alert)
+
+            logger.info(
+                "[%s] NEW Opportunity (%.2f)",
+                alert.symbol,
+                alert.current_discount,
+            )
+
+        #
+        # Opportunity Improved
+        #
+        elif state == OpportunityState.IMPROVING:
+
+            ConsoleAlert.send(alert)
+
+            WindowsAlert.send(alert)
+
+            TelegramAlert.send(alert)
+
+            logger.info(
+                "[%s] Opportunity Improved Current=%.2f Peak=%.2f",
+                alert.symbol,
+                alert.opportunity.current_discount,
+                alert.opportunity.max_discount,
+            )
+
+        #
+        # Opportunity Recovered
+        #
+        elif state == OpportunityState.RECOVERED:
+
+            ConsoleAlert.send(alert)
+
+            TelegramAlert.send(alert)
+
+            logger.info(
+                "[%s] Opportunity Recovered",
+                alert.symbol,
+            )

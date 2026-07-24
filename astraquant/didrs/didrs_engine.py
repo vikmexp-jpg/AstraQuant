@@ -46,7 +46,8 @@ class DidrsEngine:
         # Ignore discounts below entry threshold
         # only when there is NO active opportunity.
         #
-        print("Discount=%.2f", result.discount)
+        print(f"[{symbol}] Discount = {result.discount:.2f}")
+        
         if (
             result.discount < threshold
             and (

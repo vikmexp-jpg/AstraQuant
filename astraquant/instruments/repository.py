@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from datetime import datetime
 
+from astraquant.logger import logger
+
 
 
 class InstrumentRepository:
@@ -13,7 +15,7 @@ class InstrumentRepository:
         with open(json_file, "r", encoding="utf-8") as fp:
             self.data = json.load(fp)
 
-        print(f"Loaded {len(self.data):,} instruments.")
+        logger.info(f"Loaded {len(self.data):,} instruments.")
 
 
     def find_option(

@@ -94,7 +94,7 @@ while True:
             "discount_threshold",
             5.0,
         )
-        print("Scanning for ...",{symbol})
+
         lifecycle = engine.run(
             symbol=symbol,
             threshold=threshold,

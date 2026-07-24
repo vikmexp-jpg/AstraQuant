@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from astraquant.logger import logger
 from astraquant.alerts.alert import Alert
 from astraquant.alerts.alert_engine import AlertEngine
 from astraquant.scanners.discount_scanner import DiscountScanner
@@ -37,9 +38,32 @@ class DidrsEngine:
             return None
 
         #
-        # Ignore symbols that have no intrinsic opportunity.
-        # (Example: Deep ITM CE trading above intrinsic value.)
+        # Existing opportunity
         #
+        active = self.manager.active_opportunity(symbol)
+
+        #
+        # Ignore discounts below entry threshold
+        # only when there is NO active opportunity.
+        #
+        print("Discount=%.2f", result.discount)
+        if (
+            result.discount < threshold
+            and (
+                active is None
+                or active.status == OpportunityStatus.CLOSED
+            )
+        ):
+
+            logger.info(
+                "[%s] No Opportunity | Discount=%.2f Threshold=%.2f",
+                symbol,
+                result.discount,
+                threshold,
+            )
+
+            return None
+
         #
         # Current market snapshot
         #
@@ -61,11 +85,14 @@ class DidrsEngine:
         lifecycle = self.manager.update(
             opportunity_result
         )
+
+        #
+        # Tracker reset after opportunity closes.
+        #
         if lifecycle.status == OpportunityStatus.CLOSED:
 
-            self.tracker.reset(
-                symbol,
-            )
+            self.tracker.reset(symbol)
+
         #
         # Trading signal
         #
@@ -87,8 +114,7 @@ class DidrsEngine:
         )
 
         #
-        # Notify only BUY signals.
-        # Lifecycle is still updated for HOLD/RECOVERED.
+        # Notify BUY signals only.
         #
         if signal.action == "BUY":
             AlertEngine.notify(alert)

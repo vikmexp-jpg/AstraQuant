@@ -8,6 +8,7 @@ from astraquant.pricing.strike_selector import StrikeSelector
 from astraquant.scanners.candle_matcher import CandleMatcher
 from astraquant.scanners.models.discount_event import DiscountEvent
 from astraquant.scanners.models.scan_result import ScanResult
+from time import perf_counter
 
 
 class DiscountScanner:
@@ -44,6 +45,8 @@ class DiscountScanner:
         #
         # Download Spot History
         #
+        start = perf_counter()
+
         spot_candles = self.broker.history.get_historical_candles(
             instrument_key=config["spot_key"],
             interval=interval,
@@ -51,10 +54,21 @@ class DiscountScanner:
             start_datetime=cycle.scan_start,
             end_datetime=cycle.scan_end,
         )
-
+        logger.info(
+            "[%s] Spot History : %.3f sec",
+            symbol,
+            perf_counter() - start,
+        )
         if not spot_candles:
 
-            logger.warning("No Spot candles found.")
+            logger.warning(
+                "[%s] No Spot candles found. "
+                "ScanStart=%s ScanEnd=%s SpotKey=%s",
+                symbol,
+                cycle.scan_start,
+                cycle.scan_end,
+                config["spot_key"],
+            )
             return None
 
         current_spot = spot_candles[-1].close
@@ -63,13 +77,18 @@ class DiscountScanner:
             spot=current_spot,
             offset=config["anchor_interval"],
         )
-
+        
         instrument = self.broker.instruments.find_option(
             symbol=config["option_prefix"],
             strike=strike,
             option_type=option_type,
         )
+        
 
+        logger.info("[%s] Selected Strike : %s", symbol, strike)
+        logger.info("[%s] Trading Symbol  : %s", symbol, instrument["trading_symbol"])
+        logger.info("[%s] Instrument Key  : %s", symbol, instrument["instrument_key"])
+        start = perf_counter()
         option_candles = self.broker.history.get_historical_candles(
             instrument_key=instrument["instrument_key"],
             interval=interval,
@@ -78,10 +97,50 @@ class DiscountScanner:
             end_datetime=cycle.scan_end,
         )
 
+        # Dynamic scan time selection
+        if not option_candles:
+            logger.warning("[%s] No Option candles found.", symbol)
+            return None
+
+        first_option_ts = option_candles[0].timestamp
+
+        logger.debug("[%s] First Option Candle : %s", symbol, first_option_ts)
+
+        spot_candles = [
+            candle
+            for candle in spot_candles
+            if candle.timestamp >= first_option_ts
+        ]
+
+        logger.debug("========== SPOT TIMESTAMPS ==========")
+        for candle in spot_candles[:20]:
+            logger.debug(candle.timestamp)
+
+        logger.debug("========== OPTION TIMESTAMPS ==========")
+        for candle in option_candles[:20]:
+            logger.debug(candle.timestamp)
+        logger.info(
+                    "[%s] Option History : %.3f sec",
+                    symbol,
+                    perf_counter() - start,
+                )
+        logger.info("[%s] Option Candles : %d", symbol, len(option_candles))
+
+        if option_candles:
+            logger.info("[%s] Option First : %s", symbol, option_candles[0].timestamp)
+            logger.info("[%s] Option Last  : %s", symbol, option_candles[-1].timestamp)
+
         matched = CandleMatcher.match(
             spot_candles,
             option_candles,
         )
+        logger.info("[%s] Spot Candles   : %d", symbol, len(spot_candles))
+        logger.info("[%s] Option Candles : %d", symbol, len(option_candles))
+        logger.info("[%s] Matched        : %d", symbol, len(matched))
+
+        if not matched:
+            logger.warning("[%s] No matching candles found.", symbol)
+            return None
 
         occurrences = 0
         discount_events: list[DiscountEvent] = []

@@ -12,7 +12,7 @@ class CandleScheduler:
     def next_close(
         now: datetime,
         interval: int = 5,
-        delay_seconds: int = 5,
+        delay_seconds: int = 10,
     ) -> datetime:
         """
         Returns the next completed candle time.

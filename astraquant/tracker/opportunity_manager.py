@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from astraquant.history.opportunity_history import OpportunityHistory
 from astraquant.tracker.opportunity_status import OpportunityStatus
+from astraquant.logger import logger
 
 from .opportunity import Opportunity
 from .opportunity_result import OpportunityResult
 from .opportunity_state import OpportunityState
-from astraquant.logger import logger
-
 
 
 class OpportunityManager:
@@ -19,7 +18,10 @@ class OpportunityManager:
 
         # Completed opportunities
         self._completed: list[Opportunity] = []
+
         self.history = OpportunityHistory()
+
+        # Opportunity ID generator
         self._next_id = 1
 
     def update(
@@ -39,18 +41,17 @@ class OpportunityManager:
                 symbol=symbol,
                 started_at=result.snapshot.timestamp,
                 last_updated=result.snapshot.timestamp,
-
                 state=result.state,
                 status=OpportunityStatus.ACTIVE,
-
                 start_discount=result.current_discount,
                 current_discount=result.current_discount,
                 max_discount=result.current_discount,
-
                 option=result.option_symbol,
             )
+
             self._next_id += 1
             self._active[symbol] = opportunity
+
             return opportunity
 
         #
@@ -74,16 +75,14 @@ class OpportunityManager:
                 symbol=symbol,
                 started_at=result.snapshot.timestamp,
                 last_updated=result.snapshot.timestamp,
-
                 state=result.state,
                 status=OpportunityStatus.ACTIVE,
-
                 start_discount=result.current_discount,
                 current_discount=result.current_discount,
                 max_discount=result.current_discount,
-
                 option=result.option_symbol,
             )
+
             self._next_id += 1
             self._active[symbol] = opportunity
 
@@ -109,8 +108,11 @@ class OpportunityManager:
             opportunity.status == OpportunityStatus.ACTIVE
             and result.state == OpportunityState.RECOVERED
         ):
+
             opportunity.status = OpportunityStatus.CLOSED
+
             self.history.close(opportunity)
+
             print()
             print("=" * 80)
             print("OPPORTUNITY CLOSED")
@@ -135,6 +137,7 @@ class OpportunityManager:
             opportunity.max_discount,
             opportunity.current_discount,
         )
+
         return opportunity
 
     def active_opportunity(

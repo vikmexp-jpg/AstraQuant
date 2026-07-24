@@ -13,7 +13,7 @@ INDEX_CONFIG = {
         "anchor_interval": 500,
         "expiry_weekday": 1,
         "option_prefix": "NIFTY",
-        "discount_threshold": 10.0,
+        "discount_threshold": 2.0,
     },
 
     "SENSEX": {

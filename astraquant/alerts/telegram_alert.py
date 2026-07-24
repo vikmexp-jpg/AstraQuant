@@ -47,7 +47,7 @@ class TelegramAlert:
         # Telegram Message
         #
         message_body = (
-            "🚀 <b>ASTRAQUANT DIDRS</b>\n\n"
+            "🚀 <b>Discount Strategy</b>\n\n"
 
             f"{header}\n\n"
 

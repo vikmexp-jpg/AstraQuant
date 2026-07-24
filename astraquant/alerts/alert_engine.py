@@ -46,11 +46,11 @@ class AlertEngine:
         #
         if state == OpportunityState.NEW:
 
-            ConsoleAlert.send(alert)
+            #ConsoleAlert.send(alert)
 
             SoundAlert.buy()
 
-            WindowsAlert.send(alert)
+           # WindowsAlert.send(alert)
 
             TelegramAlert.send(alert)
 
@@ -65,9 +65,9 @@ class AlertEngine:
         #
         elif state == OpportunityState.IMPROVING:
 
-            ConsoleAlert.send(alert)
+           # ConsoleAlert.send(alert)
 
-            WindowsAlert.send(alert)
+           # WindowsAlert.send(alert)
 
             TelegramAlert.send(alert)
 
@@ -83,7 +83,7 @@ class AlertEngine:
         #
         elif state == OpportunityState.RECOVERED:
 
-            ConsoleAlert.send(alert)
+           # ConsoleAlert.send(alert)
 
             TelegramAlert.send(alert)
 
